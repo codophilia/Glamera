@@ -2,8 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import List, runtime_checkable, Protocol
-
+from typing import Protocol, runtime_checkable
 
 # ---- Mixin ------------------------------------------------------------------
 
@@ -29,8 +28,8 @@ class ClothingItem(ABC):
         self,
         id: str,
         color: str,
-        style_tag: List[str],
-        occasion_suitability: List[str],
+        style_tag: list[str],
+        occasion_suitability: list[str],
         notes: str = "",
         image_url: str = "",
     ) -> None:

@@ -3,7 +3,8 @@ Mock wardrobe using typed subclasses — demonstrates polymorphism (LO2).
 Each item is the most specific type: Top, Bottom, Outerwear, or Shoes.
 """
 from __future__ import annotations
-from .items import Top, Bottom, Outerwear, Shoes
+
+from .items import Bottom, Outerwear, Shoes, Top
 
 MOCK_WARDROBE = [
     # ---- Tops ----

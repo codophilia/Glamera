@@ -9,7 +9,9 @@ Design:
 """
 from __future__ import annotations
 
-from typing import Iterable, List, Tuple
+from collections.abc import Iterable
+from typing import List, Tuple
+
 from .base import ClothingItem
 from .schema import WeatherData
 
@@ -77,7 +79,7 @@ class RulesEngine:
     # ---- Constraint logic ---------------------------------------------------
 
     def satisfies_constraints(
-        self, items: List[ClothingItem], constraints: List[str]
+        self, items: list[ClothingItem], constraints: list[str]
     ) -> bool:
         cs = {c.lower() for c in constraints}
         if "monochromatic" in cs:
@@ -94,9 +96,9 @@ class RulesEngine:
         return True
 
     def relaxation_ladder(
-        self, constraints: List[str]
-    ) -> List[Tuple[List[str], List[str]]]:
-        steps: List[Tuple[List[str], List[str]]] = [(list(constraints), [])]
+        self, constraints: list[str]
+    ) -> list[Tuple[list[str], list[str]]]:
+        steps: list[Tuple[list[str], list[str]]] = [(list(constraints), [])]
         for i in range(len(constraints), 0, -1):
             relaxed = constraints[i:]
             kept = constraints[:i - 1] if i - 1 > 0 else []

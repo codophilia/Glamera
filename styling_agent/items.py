@@ -10,10 +10,10 @@ Each subclass:
 """
 from __future__ import annotations
 
-from typing import List, Optional
-from .base import ClothingItem
-from .exceptions import InvalidWarmthRating, InvalidItemType
+from typing import Optional
 
+from .base import ClothingItem
+from .exceptions import InvalidItemType, InvalidWarmthRating
 
 VALID_TYPES = {"top", "bottom", "outerwear", "shoes", "dress", "accessory"}
 
@@ -32,8 +32,8 @@ class WardrobeItem(ClothingItem):
         item_type: str,
         color: str,
         warmth_rating: int,
-        style_tag: List[str],
-        occasion_suitability: List[str],
+        style_tag: list[str],
+        occasion_suitability: list[str],
         notes: str = "",
         image_url: Optional[str] = None,
     ) -> None:
@@ -77,7 +77,7 @@ class WardrobeItem(ClothingItem):
     # ---- Alternative constructors (@classmethod — LO1) ----------------------
 
     @classmethod
-    def from_dict(cls, data: dict) -> "WardrobeItem":
+    def from_dict(cls, data: dict) -> WardrobeItem:
         """
         Alternative constructor from a plain dict (e.g. Gemini JSON output).
         @classmethod so it can be called without an instance.
@@ -94,7 +94,7 @@ class WardrobeItem(ClothingItem):
         )
 
     @classmethod
-    def from_upload(cls, filename: str, meta: dict) -> "WardrobeItem":
+    def from_upload(cls, filename: str, meta: dict) -> WardrobeItem:
         """Alternative constructor for gallery-uploaded items."""
         meta["id"] = f"u_{filename}"
         meta["image_url"] = f"gallery/{meta.get('item_type', 'other')}s/{filename}"
@@ -115,7 +115,7 @@ class WardrobeItem(ClothingItem):
             f"color={self._color!r}, warmth={self._warmth_rating})"
         )
 
-    def __lt__(self, other: "WardrobeItem") -> bool:
+    def __lt__(self, other: WardrobeItem) -> bool:
         """Sort by warmth_rating — enables sorted(wardrobe)."""
         if not isinstance(other, WardrobeItem):
             return NotImplemented

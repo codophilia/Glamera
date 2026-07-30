@@ -2,22 +2,22 @@
 StylingAgent — orchestrates the full recommendation pipeline.
 
 Design:
-  - StylingAgent uses COMPOSITION (has-a wardrobe, has-a scorer) — LO4
+  - StylingAgent uses COMPOSITION (has-a wardrobe, has-a scorer)
   - Conforms to the Recommender Protocol — LO5, DIP (SOLID)
   - LoggableMixin adds reusable logging — Mixin, SRP (SOLID)
-  - _assemble() uses polymorphic occasion_fit() — LO2
+  - _assemble() uses polymorphic occasion_fit()
 """
 from __future__ import annotations
 
 from typing import List, Optional
 
-from .base import LoggableMixin, Recommender
-from .schema import WardrobeItem, Outfit, StylingRequest, WeatherData
+from .base import LoggableMixin
+from .exceptions import StylingError
+from .gemini import evaluate_color_harmony, write_rationale
+from .rules import RulesEngine
+from .schema import Outfit, StylingRequest, WardrobeItem, WeatherData
 from .wardrobe import MOCK_WARDROBE
 from .weather import get_weather
-from .rules import RulesEngine
-from .gemini import write_rationale, evaluate_color_harmony
-from .exceptions import StylingError
 
 SLOTS = ["top", "bottom", "shoes"]
 
@@ -38,12 +38,12 @@ class StylingAgent(LoggableMixin):
 
     def __init__(
         self,
-        wardrobe: Optional[List[WardrobeItem]] = None,
-        extra_wardrobe: Optional[List[WardrobeItem]] = None,
-        rules: Optional["RulesEngine"] = None,
+        wardrobe: list[WardrobeItem] | None = None,
+        extra_wardrobe: list[WardrobeItem] | None = None,
+        rules: RulesEngine | None = None,
     ) -> None:
         base = wardrobe or MOCK_WARDROBE
-        self._wardrobe: List[WardrobeItem] = base + (extra_wardrobe or [])
+        self._wardrobe: list[WardrobeItem] = base + (extra_wardrobe or [])
         self._rules: RulesEngine = rules or RulesEngine()   # DIP injection
 
     # ---- Public interface ---------------------------------------------------
@@ -76,11 +76,11 @@ class StylingAgent(LoggableMixin):
 
     def _build_outfit(
         self,
-        items: List[WardrobeItem],
+        items: list[WardrobeItem],
         request: StylingRequest,
         weather: WeatherData,
-        kept: List[str],
-        relaxed: List[str],
+        kept: list[str],
+        relaxed: list[str],
     ) -> Outfit:
         rationale = write_rationale(
             items, weather=weather, event_type=request.event_type,
@@ -95,7 +95,7 @@ class StylingAgent(LoggableMixin):
             color_rationale=harmony["color_rationale"],
         )
 
-    def _candidates(self, slot: str, event_type: str) -> List[WardrobeItem]:
+    def _candidates(self, slot: str, event_type: str) -> list[WardrobeItem]:
         """Filter wardrobe by slot, preferring occasion matches."""
         slot_matches = [it for it in self._wardrobe if it.item_type == slot]
         occasion_matches = [
@@ -107,8 +107,8 @@ class StylingAgent(LoggableMixin):
         self,
         request: StylingRequest,
         weather: WeatherData,
-        constraints: List[str],
-    ) -> List[WardrobeItem]:
+        constraints: list[str],
+    ) -> list[WardrobeItem]:
         """
         Greedy slot fill using POLYMORPHIC occasion_fit() per item type.
         Each WardrobeItem subclass (Top, Bottom, Shoes...) scores differently — LO2.
@@ -117,7 +117,7 @@ class StylingAgent(LoggableMixin):
         if self._rules.needs_outerwear(weather):
             slots.append("outerwear")
 
-        chosen: List[WardrobeItem] = []
+        chosen: list[WardrobeItem] = []
         for slot in slots:
             candidates = self._candidates(slot, request.event_type)
             if not candidates:
@@ -143,12 +143,10 @@ class StylingAgent(LoggableMixin):
         """Bonus score for constraint-aware cohesion between chosen items."""
         bonus = 0.0
         cs = {c.lower() for c in constraints}
-        if "monochromatic" in cs and chosen:
-            if item.color in {c.color for c in chosen}:
-                bonus += 2.0
-        if "leg lengthening" in cs and item.item_type == "bottom":
-            if "leg lengthening" in item.style_tag:
-                bonus += 3.0
+        if "monochromatic" in cs and chosen and item.color in {c.color for c in chosen}:
+            bonus += 2.0
+        if "leg lengthening" in cs and item.item_type == "bottom" and "leg lengthening" in item.style_tag:
+            bonus += 3.0
         return bonus
 
     # ---- Dunder (LO6) -------------------------------------------------------

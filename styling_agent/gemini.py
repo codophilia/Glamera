@@ -12,10 +12,9 @@ Model name can be overridden with GEMINI_MODEL (default: gemini-2.5-flash).
 from __future__ import annotations
 
 import os
-from typing import List, Optional
+from typing import Optional
 
 from .schema import WardrobeItem, WeatherData
-
 
 # ---------------------------------------------------------------------------
 # Model factory
@@ -66,7 +65,7 @@ _SYSTEM = (
 )
 
 
-def _format_items(items: List[WardrobeItem]) -> str:
+def _format_items(items: list[WardrobeItem]) -> str:
     return "\n".join(
         f"- {it.item_type}: {it.color} ({', '.join(it.style_tag)})"
         for it in items
@@ -74,8 +73,8 @@ def _format_items(items: List[WardrobeItem]) -> str:
 
 
 def _template_fallback(
-    items: List[WardrobeItem],
-    weather: Optional[WeatherData],
+    items: list[WardrobeItem],
+    weather: WeatherData | None,
     event_type: str,
 ) -> str:
     """Deterministic rationale used when the LLM is unavailable."""
@@ -92,13 +91,13 @@ def _template_fallback(
 
 
 def write_rationale(
-    items: List[WardrobeItem],
+    items: list[WardrobeItem],
     *,
     weather: Optional[WeatherData],
     event_type: str,
-    constraints: List[str],
-    preferences: List[str],
-    relaxed: List[str],
+    constraints: list[str],
+    preferences: list[str],
+    relaxed: list[str],
     style_profile: str = "",
 ) -> str:
     """Build the prompt, call Gemini, fall back to template on empty response."""
@@ -142,7 +141,7 @@ _COLOR_SYSTEM = (
 
 
 def evaluate_color_harmony(
-    items: List[WardrobeItem],
+    items: list[WardrobeItem],
     *,
     style_profile: str = "",
 ) -> dict:
